@@ -35,11 +35,26 @@ export function RepoGrid({ initialRepos }: RepoGridProps) {
     try {
       const topicQuery = topic !== undefined ? topic : selectedTopic;
       const preset = TOPIC_PRESETS.find((p) => p.value === topicQuery);
-      const topicParam = preset?.query ? `&topic=${encodeURIComponent(preset.query)}` : '';
-      const res = await fetch(`/api/repos?days=${days}${topicParam}`);
+
+      const since = new Date();
+      since.setDate(since.getDate() - Number(days));
+      const dateStr = since.toISOString().split('T')[0];
+
+      const queryParts = [`created:>${dateStr}`];
+      if (preset?.query) queryParts.push(preset.query);
+
+      const url = `https://api.github.com/search/repositories?q=${encodeURIComponent(queryParts.join(' '))}&sort=stars&order=desc&per_page=10`;
+      const res = await fetch(url, {
+        headers: { Accept: 'application/vnd.github.v3+json' },
+      });
+
+      if (res.status === 403) {
+        const reset = res.headers.get('X-RateLimit-Reset');
+        const waitSec = reset ? Math.ceil((Number(reset) * 1000 - Date.now()) / 1000) : 60;
+        throw new Error(`Rate limited by GitHub. Try again in ${waitSec}s.`);
+      }
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `Failed to fetch (${res.status})`);
+        throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
       }
       const data = await res.json();
       setRepos(data.items ?? []);

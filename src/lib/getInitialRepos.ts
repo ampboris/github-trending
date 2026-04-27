@@ -10,7 +10,6 @@ export async function getInitialRepos() {
   try {
     const res = await fetch(url, {
       headers: { Accept: 'application/vnd.github.v3+json' },
-      next: { revalidate: 300 },
     });
 
     if (!res.ok) return [];

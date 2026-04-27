@@ -64,7 +64,8 @@ describe('RepoGrid integration', () => {
     });
 
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/repos?days=14'),
+      expect.stringContaining('https://api.github.com/search/repositories'),
+      expect.objectContaining({ headers: { Accept: 'application/vnd.github.v3+json' } }),
     );
   });
 
