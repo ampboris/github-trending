@@ -23,7 +23,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx next build
+      - run: ./node_modules/.bin/next build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: out
